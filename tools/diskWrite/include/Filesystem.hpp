@@ -24,12 +24,12 @@ public:
     void        RawWrite(const char* fname, size_t offsetIn, size_t offset, size_t length);
     void        CopyIn(const char* source, const char* dest);
     void        CopyOut(const char* source, const char* dest);
-    void        Format(const char* fname, const char* volumeName);
+    void        Format(const char* volumeName);
 
 private:
     HMODULE hm;
 
-    const char*   (*_LastError)         ();
+    const char* (*_LastError)           ();
     bool        (*_Open)                (const char*, unsigned int, unsigned int);
     bool        (*_Close)               ();
     bool        (*_Exists)              (const char*, bool*);
@@ -44,5 +44,5 @@ private:
     bool        (*_RawWrite)            (const char*, size_t, size_t, size_t);
     bool        (*_CopyIn)              (const char*, const char*);
     bool        (*_CopyOut)             (const char*, const char*);
-    bool        (*_Format)              (const char*, const char*);
+    bool        (*_Format)              (const char*);
 };

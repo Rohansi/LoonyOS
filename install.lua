@@ -15,8 +15,6 @@ Dismount();
 LoadDriver("FAT32.dll");
 Mount("bin/disk.img")
 
-CopyOut("test", "out.bin")
-
 DirCreate("loony")
 ChDir("/loony/")
 

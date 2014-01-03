@@ -1,6 +1,4 @@
-#include <Script.hpp>
-#include "mbr.hpp"
-#include <fstream>
+#include "Script.hpp"
 
 Script::Script() {
 	filesystem = NULL;
@@ -13,7 +11,7 @@ Script::~Script() {
 	}
 }
 
-void Script::Run(const std::string& filename) {
+void Script::Run(const std::string& filename, lua_Hook hook) {
 	lua_State* L = luaL_newstate();
 
     if (L == NULL) {
@@ -35,6 +33,9 @@ void Script::Run(const std::string& filename) {
     Register(L, "DirDelete", DirDelete);
     Register(L, "Format", Format);
     Register(L, "Exists", Exists);
+
+    if (hook)
+        lua_sethook(L, hook, LUA_MASKLINE, 0);
 
 	if (luaL_dofile(L, filename.c_str())) {
         std::exception e(lua_tostring(L, 1));
@@ -266,11 +267,11 @@ int DirDelete(lua_State* L) {
 int Format(lua_State* L) {
     Script* script = GetScript(L);
 
-	if (lua_gettop(L) != 2 || !lua_isstring(L, 1) || !lua_isstring(L, 2)) {
+	if (lua_gettop(L) != 1 || !lua_isstring(L, 1)) {
         throw std::exception("Format: invalid parameters");
 	}
 
-	script->filesystem->Format(lua_tostring(L, 1), lua_tostring(L, 2));
+	script->filesystem->Format(lua_tostring(L, 1));
 	return 0;
 }
 

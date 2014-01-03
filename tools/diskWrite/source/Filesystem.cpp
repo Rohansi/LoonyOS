@@ -1,55 +1,55 @@
 #include <Filesystem.hpp>
 
 Filesystem::Filesystem(const std::string& dll) {
-	hm = LoadLibraryA(dll.c_str());
+    hm = LoadLibraryA(dll.c_str());
 
-	_Open			= NULL;
-	_Close			= NULL;
-	_Exists			= NULL;
-	_DirOpenRoot	= NULL;
-	_DirOpen		= NULL;
-	_DirUp			= NULL;
-	_Copy			= NULL;
-	_Rename			= NULL;
-	_Delete			= NULL;
-	_DirCreate		= NULL;
-	_DirDelete		= NULL;
-	_RawWrite		= NULL;
-	_CopyIn			= NULL;
-	_CopyOut		= NULL;
-	_Format			= NULL;
+    _Open           = NULL;
+    _Close          = NULL;
+    _Exists         = NULL;
+    _DirOpenRoot    = NULL;
+    _DirOpen        = NULL;
+    _DirUp          = NULL;
+    _Copy           = NULL;
+    _Rename         = NULL;
+    _Delete         = NULL;
+    _DirCreate      = NULL;
+    _DirDelete      = NULL;
+    _RawWrite       = NULL;
+    _CopyIn         = NULL;
+    _CopyOut        = NULL;
+    _Format         = NULL;
 
-	if (hm) {
+    if (hm) {
         _LastError      = (const char*(*)())                                    GetProcAddress(hm, "LastError");
-		_Open			= (bool(*)(const char*, unsigned int, unsigned int))    GetProcAddress(hm, "Open");
-		_Close			= (bool(*)())									        GetProcAddress(hm, "Close");
-		_Exists			= (bool(*)(const char*, bool*))						    GetProcAddress(hm, "Exists");
-		_DirOpenRoot	= (bool(*)())									        GetProcAddress(hm, "DirOpenRoot");
-		_DirOpen		= (bool(*)(const char*))						        GetProcAddress(hm, "DirOpen");
-		_DirUp			= (bool(*)())									        GetProcAddress(hm, "DirUp");
-		_Copy			= (bool(*)(const char*, const char*))			        GetProcAddress(hm, "Copy");
-		_Rename			= (bool(*)(const char*, const char*))			        GetProcAddress(hm, "Rename");
-		_Delete			= (bool(*)(const char*))						        GetProcAddress(hm, "Delete");
-		_DirCreate		= (bool(*)(const char*))						        GetProcAddress(hm, "DirCreate");
-		_DirDelete		= (bool(*)(const char*))						        GetProcAddress(hm, "DirDelete");
-		_RawWrite		= (bool(*)(const char*, size_t, size_t, size_t))        GetProcAddress(hm, "RawWrite");
-		_CopyIn			= (bool(*)(const char*, const char*))			        GetProcAddress(hm, "CopyIn");
-		_CopyOut		= (bool(*)(const char*, const char*))			        GetProcAddress(hm, "CopyOut");
-		_Format			= (bool(*)(const char*, const char*))			        GetProcAddress(hm, "Format");
-	}
+        _Open           = (bool(*)(const char*, unsigned int, unsigned int))    GetProcAddress(hm, "Open");
+        _Close          = (bool(*)())                                           GetProcAddress(hm, "Close");
+        _Exists         = (bool(*)(const char*, bool*))                         GetProcAddress(hm, "Exists");
+        _DirOpenRoot    = (bool(*)())                                           GetProcAddress(hm, "DirOpenRoot");
+        _DirOpen        = (bool(*)(const char*))                                GetProcAddress(hm, "DirOpen");
+        _DirUp          = (bool(*)())                                           GetProcAddress(hm, "DirUp");
+        _Copy           = (bool(*)(const char*, const char*))                   GetProcAddress(hm, "Copy");
+        _Rename         = (bool(*)(const char*, const char*))                   GetProcAddress(hm, "Rename");
+        _Delete         = (bool(*)(const char*))                                GetProcAddress(hm, "Delete");
+        _DirCreate      = (bool(*)(const char*))                                GetProcAddress(hm, "DirCreate");
+        _DirDelete      = (bool(*)(const char*))                                GetProcAddress(hm, "DirDelete");
+        _RawWrite       = (bool(*)(const char*, size_t, size_t, size_t))        GetProcAddress(hm, "RawWrite");
+        _CopyIn         = (bool(*)(const char*, const char*))                   GetProcAddress(hm, "CopyIn");
+        _CopyOut        = (bool(*)(const char*, const char*))                   GetProcAddress(hm, "CopyOut");
+        _Format         = (bool(*)(const char*))                                GetProcAddress(hm, "Format");
+    }
 }
 
 Filesystem::~Filesystem() {
-	if (hm)
-		FreeLibrary(hm);
+    if (hm)
+        FreeLibrary(hm);
 }
 
 bool Filesystem::IsLoaded() {
-	return hm && _LastError && _Open && _Close;
+    return hm && _LastError && _Open && _Close;
 }
 
 void Filesystem::Open(const char* fname, unsigned int partOffset, unsigned int partLen) {
-    if(!hm)
+    if (!hm)
         throw std::exception("Filesystem driver not loaded");
 
     if (!_Open)
@@ -66,7 +66,7 @@ void Filesystem::Close() {
     if (!_Close)
         throw std::exception("Filesystem does not support Close");
 
-	if (!_Close())
+    if (!_Close())
         throw std::exception(_LastError());
 }
 
@@ -204,13 +204,13 @@ void Filesystem::CopyOut(const char* source, const char* dest) {
         throw std::exception(_LastError());
 }
 
-void Filesystem::Format(const char* fname, const char* volumeName) {
+void Filesystem::Format(const char* volumeName) {
     if (!hm)
         throw std::exception("Filesystem driver not loaded");
 
     if (!_Format)
         throw std::exception("Filesystem does not support Format");
 
-    if (!_Format(fname, volumeName))
+    if (!_Format(volumeName))
         throw std::exception(_LastError());
 }

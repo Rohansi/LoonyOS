@@ -1,32 +1,36 @@
-
 #ifndef __SCRIPT_HPP
 #define __SCRIPT_HPP
 
 #include <iostream>
 #include <string>
-#include <Filesystem.hpp>
-#include <Path.hpp>
+#include <fstream>
+
+#include "Filesystem.hpp"
+#include "Path.hpp"
+#include "Mbr.hpp"
 
 extern "C" {
-	#include <lua.h>
-	#include <lualib.h>
-	#include <lauxlib.h>
+    #include <lua.h>
+    #include <lualib.h>
+    #include <lauxlib.h>
 }
 
 class Script {
-    public:
-        Script();
-        ~Script();
+public:
+    Script();
+    ~Script();
 
-        void Run(const std::string& filename);
+    void Run(const std::string& filename, lua_Hook hook = NULL);
 
-        void LoadFilesystem(const std::string& filename);
-        void UnloadFilesystem();
+    void LoadFilesystem(const std::string& filename);
+    void UnloadFilesystem();
 
-        Filesystem* filesystem;
+    Filesystem* filesystem;
 
-    private:
-        void Register(lua_State* L, const std::string& name, lua_CFunction func);
+private:
+    void Register(lua_State* L, const std::string& name, lua_CFunction func);
+
+    int line;
 };
 
 int LoadDriver(lua_State* L);

@@ -1,7 +1,7 @@
 /*
- *	main.cpp
- *	FAT32 diskWrite Driver
- */
+*	main.cpp
+*	FAT32 diskWrite Driver
+*/
 
 #include <iostream>
 #include <string>
@@ -180,11 +180,11 @@ uint32_t FindFreeCluster() {
 }
 
 /*
- *	entry->cluster  = last cluster (current EOF)
- *	entry->sector   = current FAT sector to read/write
- *	entry->buffer   = FAT buffer
- *	cluster			= new EOF cluster
- */
+*	entry->cluster  = last cluster (current EOF)
+*	entry->sector   = current FAT sector to read/write
+*	entry->buffer   = FAT buffer
+*	cluster			= new EOF cluster
+*/
 void UpdateFAT(FatEntry* entry, uint32_t cluster) {
     // Update old EOF to point to new cluster
     *(uint32_t*)(entry->buffer + GetFATOffset(entry->cluster)) = cluster;
@@ -204,11 +204,11 @@ void UpdateFAT(FatEntry* entry, uint32_t cluster) {
 }
 
 /*
- *	entry = empty allocated DirectoryEntry
- *	Expects that directoryBuffer, directorySectors, directorySector are all valid
- *	entry will be moved to a valid place in memory
- *	DOES NOT WRITE TO DISK, JUST MEMORY
- */
+*	entry = empty allocated DirectoryEntry
+*	Expects that directoryBuffer, directorySectors, directorySector are all valid
+*	entry will be moved to a valid place in memory
+*	DOES NOT WRITE TO DISK, JUST MEMORY
+*/
 DirectoryEntry* MakeEntry(const char* filename, const uint8_t attrib, const uint32_t size, const Directory* dir) {
     // Get the time
     time_t timestamp;
@@ -391,12 +391,19 @@ exp const char* LastError() {
     return lastError.c_str();
 }
 
-exp bool Open(const char* fname, unsigned int partitionOffset, unsigned int partitionLength) {
+void LastError(const std::string& scope, const std::string& msg) {
+    lastError = "FAT32 - " + scope + ": " + msg;
+}
+
+exp bool Open(const char* fname, unsigned int pO, unsigned int pLen) {
+    partitionOffset = pO;
+    partitionLength = pLen;
+
     // Open the image
     f.open(fname, std::ios::in | std::ios::out | std::ios::binary);
 
     if (!f.is_open()) {
-        lastError = "Failed to open disk";
+        LastError("Open", "Failed to open disk");
         return false;
     }
 
@@ -409,7 +416,7 @@ exp bool Open(const char* fname, unsigned int partitionOffset, unsigned int part
 
     // Read the BPB
     if (!ReadBPB()) {
-        lastError = "Failed to read the BPB!";
+        LastError("Open", "Failed to read the BPB");
         return false;
     }
 
@@ -419,7 +426,7 @@ exp bool Open(const char* fname, unsigned int partitionOffset, unsigned int part
 
     // Load the root directory
     if (!DirOpenRoot()) {
-        lastError = "Failed to load the root directory!";
+        LastError("Open", "Failed to load the root directory");
         return false;
     }
 
@@ -442,11 +449,8 @@ exp bool Close() {
     return true;
 }
 
-exp bool Exists(const char* name, bool* result) {
-    char dosName[12];
-    ToDos83Name(name, dosName);
-    *result = (FindEntry(dosName, &directory) != 0);
-    return true;
+exp bool Exists(const char* name) {
+    return (FindEntry(name, &directory) != 0);
 }
 
 exp bool DirOpenRoot() {
@@ -459,19 +463,21 @@ exp bool DirOpenRoot() {
 }
 
 exp bool DirOpen(const char* name) {
-    char dosName[12];
+    char* dosName = new char[12];
     ToDos83Name(name, dosName);
 
     // Open the entry
     DirectoryEntry* entry = FindEntry(dosName, &directory);
     if (!entry) {
-        lastError = "Directory doesn't exist!";
+        delete[] dosName;
+        LastError("DirOpen", "Directory doesn't exist");
         return false;
     }
 
     // Check that it is in fact a directory
     if (!(entry->attrib & ATTRIB_DIRECTORY)) {
-        lastError = "Not a directory!";
+        delete[] dosName;
+        LastError("DirOpen", "Not a directory");
         return false;
     }
 
@@ -499,6 +505,8 @@ exp bool DirOpen(const char* name) {
 
     //ReadSectors(directoryBuffer,directorySector,directorySectors);
 
+    delete[] dosName;
+
     return true;
 }
 
@@ -506,16 +514,14 @@ exp bool DirUp() {
     return DirOpen("..         ");
 }
 
-/*exp bool Copy(const char* source, const char* dest) {
+exp bool Copy(const char* source, const char* dest) {
     return false;
-    }*/
+}
 
 exp bool RawWrite(const char* fname, size_t offsetIn, size_t offset, size_t len) {
     std::ifstream in(fname, std::ios::in | std::ios::binary);
-    if (!in.is_open()) {
-        lastError = "FAT32: rawwrite file not found";
+    if (!in.is_open())
         return false;
-    }
 
     // Seek to proper offsets
     in.seekg(offsetIn, std::ios::beg);
@@ -534,15 +540,15 @@ exp bool RawWrite(const char* fname, size_t offsetIn, size_t offset, size_t len)
 
 exp bool Rename(const char* old, const char* newname) {
     // Convert the filename into DOS8.3 format
-    char dosName[12];
-    char dosNameNew[12];
+    char* dosName = new char[12];
+    char* dosNameNew = new char[12];
     ToDos83Name(old, dosName);
     ToDos83Name(newname, dosNameNew);
 
     // Find the entry
     DirectoryEntry* entry = FindEntry(dosName, &directory);
     if (!entry) {
-        lastError = "Failed to find file!";
+        LastError("Rename", "Failed to find file");
         return false;
     }
 
@@ -551,23 +557,26 @@ exp bool Rename(const char* old, const char* newname) {
     DirectoryWrite(&directory);
     //WriteSector(directoryBuffer + ((((char*)entry - directoryBuffer) / 512) * 512),directorySector + (((char*)entry - directoryBuffer) / 512));
 
+    delete[] dosName;
+    delete[] dosNameNew;
+
     return true;
 }
 
 exp bool Delete(const char* filename) {
     // Convert the filename into DOS8.3 format
-    char dosName[12];;
+    char* dosName = new char[12];
     ToDos83Name(filename, dosName);
 
     // Find entry
     DirectoryEntry* entry = FindEntry(dosName, &directory);
     if (!entry) {
-        lastError = "Failed to find file!";
+        LastError("Delete", "Failed to find file");
         return false;
     }
 
     if (!(entry->attrib & ATTRIB_ARCHIVE) || (entry->attrib & ATTRIB_DIRECTORY)) {
-        lastError = "This is not a file!";
+        LastError("Delete", "This is not a file");
         return false;
     }
 
@@ -595,17 +604,13 @@ exp bool Delete(const char* filename) {
 
 exp bool DirCreate(const char* dirName) {
     // Convert the filename into DOS8.3 format
-    char dosName[12];
+    char* dosName = new char[12];
     ToDos83Name(dirName, dosName);
-
-    // exists, dont need a new one
-    if (FindEntry(dosName, &directory) != 0) {
-        return true;
-    }
 
     DirectoryEntry* entry = MakeEntry(dosName, ATTRIB_DIRECTORY, 0, &directory);
     if (!entry) {
-        lastError = "Failed to create a directory!";
+        LastError("DirCreate", "Failed to create a directory");
+        delete[] dosName;
         return false;
     }
 
@@ -621,14 +626,16 @@ exp bool DirCreate(const char* dirName) {
     DirectoryWrite(&directory);
     //WriteSector(directoryBuffer + ((((char*)entry - directoryBuffer) / 512) * 512),directorySector + (((char*)entry - directoryBuffer) / 512));
 
+    delete[] dosName;
     delete[] fatEntry.buffer;
 
     return true;
 }
 
-/*exp bool DirDelete(const char* path) {
+exp bool DirDelete(const char* path) {
+
     return false;
-    }*/
+}
 
 exp bool CopyIn(const char* source, const char* dest) {
     DirectoryEntry* entry = 0;
@@ -637,7 +644,7 @@ exp bool CopyIn(const char* source, const char* dest) {
     // Open file we're copying in
     std::ifstream inHandle(source, std::ios::in | std::ios::binary | std::ios::ate);
     if (!inHandle.is_open()) {
-        lastError = "Failed to open source file for writing!";
+        LastError("CopyIn", "Failed to open source file");
         return false;
     }
 
@@ -646,7 +653,7 @@ exp bool CopyIn(const char* source, const char* dest) {
     inHandle.seekg(std::ios::beg);
 
     // Convert the filename into DOS8.3 format
-    char dosName[12];
+    char* dosName = new char[12];
     ToDos83Name(dest, dosName);
 
     // Check if entry exists, if so, overwrite it
@@ -664,8 +671,9 @@ exp bool CopyIn(const char* source, const char* dest) {
         // Didn't delete file, make it
         entry = MakeEntry(dosName, ATTRIB_ARCHIVE, inLength, &directory);
         if (!entry) {
+            LastError("CopyIn", "Failed to create directory entry");
+            delete[] dosName;
             delete[] buffer;
-            lastError = "Failed to create directory entry!";
             return false;
         }
     }
@@ -673,8 +681,9 @@ exp bool CopyIn(const char* source, const char* dest) {
         // Deleted file, find it
         entry = FindEntry(dosName, &directory);
         if (!entry) {
+            LastError("CopyIn", "Somehow a file that was just undeleted can't be found...");
+            delete[] dosName;
             delete[] buffer;
-            lastError = "Somehow a file that was just undeleted can't be found...";
             return false;
         }
 
@@ -704,6 +713,7 @@ exp bool CopyIn(const char* source, const char* dest) {
         WriteCluster(&fatEntry, buffer);
     }
 
+    delete[] dosName;
     delete[] buffer;
     delete[] fatEntry.buffer;
 
@@ -714,18 +724,18 @@ exp bool CopyIn(const char* source, const char* dest) {
 
 exp bool CopyOut(const char* source, const char* dest) {
     // Convert the filename into DOS8.3 format
-    char dosName[12];
+    char* dosName = new char[12];
     ToDos83Name(source, dosName);
 
     // Find the file on the disk
     DirectoryEntry* entry = FindEntry(dosName, &directory);
     if (!entry) {
-        lastError = "File doesn't exist!";
+        LastError("CopyOut", "File doesn't exist");
         return false;
     }
 
     if (!(entry->attrib & ATTRIB_ARCHIVE)) {
-        lastError = "This is not a file!";
+        LastError("CopyOut", "This is not a file");
         return false;
     }
 
@@ -756,6 +766,7 @@ exp bool CopyOut(const char* source, const char* dest) {
 
     delete[] fatEntry.buffer;
     delete[] sectorData;
+    delete[] dosName;
 
     outHandle.close();
 
