@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "diskWrite", "diskWrite.vcxproj", "{4520031D-6567-4E43-9D40-5865C4C44E38}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Filesystems", "Filesystems", "{24A84AF9-00BE-4527-8CA9-63AC8BE86B92}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FAT32", "Filesystems\FAT32\FAT32.vcxproj", "{38431325-4621-4250-8D1B-B1D718983E34}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RAW", "Filesystems\RAW\RAW.vcxproj", "{6A2A6214-0B09-4791-8D99-1E755B820DAF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4520031D-6567-4E43-9D40-5865C4C44E38}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4520031D-6567-4E43-9D40-5865C4C44E38}.Debug|Win32.Build.0 = Debug|Win32
+		{4520031D-6567-4E43-9D40-5865C4C44E38}.Release|Win32.ActiveCfg = Release|Win32
+		{4520031D-6567-4E43-9D40-5865C4C44E38}.Release|Win32.Build.0 = Release|Win32
+		{38431325-4621-4250-8D1B-B1D718983E34}.Debug|Win32.ActiveCfg = Debug|Win32
+		{38431325-4621-4250-8D1B-B1D718983E34}.Debug|Win32.Build.0 = Debug|Win32
+		{38431325-4621-4250-8D1B-B1D718983E34}.Release|Win32.ActiveCfg = Release|Win32
+		{38431325-4621-4250-8D1B-B1D718983E34}.Release|Win32.Build.0 = Release|Win32
+		{6A2A6214-0B09-4791-8D99-1E755B820DAF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6A2A6214-0B09-4791-8D99-1E755B820DAF}.Debug|Win32.Build.0 = Debug|Win32
+		{6A2A6214-0B09-4791-8D99-1E755B820DAF}.Release|Win32.ActiveCfg = Release|Win32
+		{6A2A6214-0B09-4791-8D99-1E755B820DAF}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{38431325-4621-4250-8D1B-B1D718983E34} = {24A84AF9-00BE-4527-8CA9-63AC8BE86B92}
+		{6A2A6214-0B09-4791-8D99-1E755B820DAF} = {24A84AF9-00BE-4527-8CA9-63AC8BE86B92}
+	EndGlobalSection
+EndGlobal
